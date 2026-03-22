@@ -1,6 +1,6 @@
 use std::io;
 
-use noise::{NoiseFn, Perlin};
+use noise::{NoiseFn, SuperSimplex};
 use ratzilla::ratatui::style::{Color, Style};
 use ratzilla::ratatui::text::{Line, Span, Text};
 use ratzilla::ratatui::widgets::Paragraph;
@@ -13,8 +13,8 @@ fn main() -> io::Result<()> {
     let backend = CanvasBackend::new()?;
     let terminal = Terminal::new(backend)?;
 
-    let perlin = Perlin::new(42);
-    let mut time = 0.0_f64;
+    let perlin = SuperSimplex::new(42);
+    let mut time: f64 = 0.0;
 
     terminal.draw_web(move |frame| {
         render(frame, &perlin, time);
@@ -24,23 +24,24 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn render(frame: &mut Frame, perlin: &Perlin, time: f64) {
+fn render(frame: &mut Frame, perlin: &SuperSimplex, time: f64) {
     let width = frame.area().width as usize;
     let height = frame.area().height as usize;
 
     let lines: Vec<Line> = (0..height)
         .map(|y| {
-            let spans: Vec<Span> = (0..width)
-                .map(|x| terrain_span(sample(perlin, x, y, time)))
-                .collect();
-            Line::from(spans)
+            Line::from(
+                (0..width)
+                    .map(|x| terrain_span(sample(perlin, x, y, time)))
+                    .collect::<Vec<Span>>(),
+            )
         })
         .collect();
 
     frame.render_widget(Paragraph::new(Text::from(lines)), frame.area());
 }
 
-fn sample(perlin: &Perlin, x: usize, y: usize, time: f64) -> f64 {
+fn sample(perlin: &SuperSimplex, x: usize, y: usize, time: f64) -> f64 {
     let nx = x as f64 * 0.03;
     let ny = y as f64 * 0.06;
 
